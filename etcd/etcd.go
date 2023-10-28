@@ -4,16 +4,19 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"sync"
+	"text/template"
+
 	"github.com/cloudwego/kitex/pkg/klog"
 	"go.etcd.io/etcd/clientv3"
 	"go.etcd.io/etcd/mvcc/mvccpb"
 	"go.uber.org/zap"
-	"sync"
-	"text/template"
 )
 
-var m sync.Mutex
-var ctxMap map[string]context.CancelFunc
+var (
+	m      sync.Mutex
+	ctxMap map[string]context.CancelFunc
+)
 
 type Key struct {
 	Prefix string

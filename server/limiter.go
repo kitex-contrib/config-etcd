@@ -15,13 +15,15 @@
 package server
 
 import (
-	"config-etcd/etcd"
 	"context"
+	"sync/atomic"
+
+	"config-etcd/etcd"
+
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/limit"
 	"github.com/cloudwego/kitex/pkg/limiter"
 	"github.com/cloudwego/kitex/server"
-	"sync/atomic"
 )
 
 // WithLimiter sets the limiter config from etcd configuration center.
