@@ -1,6 +1,6 @@
 module config-etcd
 
-go 1.21.1
+go 1.21
 
 require (
 	github.com/cloudwego/kitex v0.7.3 // indirect
