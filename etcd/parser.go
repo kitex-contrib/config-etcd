@@ -19,8 +19,7 @@ import (
 )
 
 const (
-	EtcdDefaultServerAddr   = "127.0.0.1"
-	EtcdDefaultPort         = 2379
+	EtcdDefaultNode         = "http://127.0.0.1:2379"
 	EtcdDefaultConfigPrefix = "KitexConfig"
 	EtcdDefaultClientPath   = "{{.ClientServiceName}}/{{.ServerServiceName}}/{{.Category}}"
 	EtcdDefaultServerPath   = "{{.ServerServiceName}}/{{.Category}}"

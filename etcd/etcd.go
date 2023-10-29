@@ -17,7 +17,7 @@ package etcd
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"strconv"
 	"sync"
 	"text/template"
 
@@ -41,8 +41,8 @@ type Client interface {
 	SetParser(ConfigParser)
 	ClientConfigParam(cpc *ConfigParamConfig, cfs ...CustomFunction) (Key, error)
 	ServerConfigParam(cpc *ConfigParamConfig, cfs ...CustomFunction) (Key, error)
-	RegisterConfigCallback(ctx context.Context, cancel context.CancelFunc, key string, callback func(string, ConfigParser))
-	DeregisterConfig(key string)
+	RegisterConfigCallback(ctx context.Context, key string, clientId int64, callback func(string, ConfigParser))
+	DeregisterConfig(key string, clientId int64)
 }
 
 type client struct {
@@ -56,8 +56,7 @@ type client struct {
 
 // Options etcd config options. All the fields have default value.
 type Options struct {
-	Address          string
-	Port             uint64
+	Node             []string
 	Prefix           string
 	ServerPathFormat string
 	clientPathFormat string
@@ -69,11 +68,8 @@ type Options struct {
 // It can create a client with default config by env variable.
 // See: env.go
 func New(opts Options) (Client, error) {
-	if opts.Address == "" {
-		opts.Address = EtcdDefaultServerAddr
-	}
-	if opts.Port == 0 {
-		opts.Port = EtcdDefaultPort
+	if opts.Node == nil {
+		opts.Node = []string{EtcdDefaultNode}
 	}
 	if opts.ConfigParser == nil {
 		opts.ConfigParser = defaultConfigParse()
@@ -88,7 +84,7 @@ func New(opts Options) (Client, error) {
 		opts.clientPathFormat = EtcdDefaultClientPath
 	}
 	etcdClient, err := clientv3.New(clientv3.Config{
-		Endpoints: []string{fmt.Sprintf("http://%s:%d", opts.Address, opts.Port)},
+		Endpoints: opts.Node,
 		LogConfig: opts.LoggerConfig,
 	})
 	if err != nil {
@@ -162,16 +158,18 @@ func (c *client) render(cpc *ConfigParamConfig, t *template.Template) (string, e
 }
 
 // RegisterConfigCallback register the callback function to etcd client.
-func (c *client) RegisterConfigCallback(ctx context.Context, cancel context.CancelFunc, key string, callback func(string, ConfigParser)) {
+func (c *client) RegisterConfigCallback(ctx context.Context, key string, clientId int64, callback func(string, ConfigParser)) {
+	clientCtx, cancel := context.WithCancel(context.Background())
 	go func() {
 		select {
-		case <-ctx.Done():
+		case <-clientCtx.Done():
 			return
 		default:
 			m.Lock()
-			ctxMap[key] = cancel
+			tmp := key + "/" + strconv.FormatInt(clientId, 10)
+			ctxMap[tmp] = cancel
 			m.Unlock()
-			watchChan := c.ecli.Watch(context.Background(), key)
+			watchChan := c.ecli.Watch(ctx, key)
 			for watchResp := range watchChan {
 				for _, event := range watchResp.Events {
 					eventType := mvccpb.Event_EventType(event.Type)
@@ -194,13 +192,15 @@ func (c *client) RegisterConfigCallback(ctx context.Context, cancel context.Canc
 	data, err := c.ecli.Get(context.Background(), key)
 	// the etcd client has handled the not exist error.
 	if err != nil {
-		panic(err)
+		klog.Debugf("[etcd] key: %s config get value failed", key)
+		return
 	}
 
 	callback(string(data.Kvs[0].Value), c.parser)
 }
 
-func (c *client) DeregisterConfig(key string) {
-	cancel := ctxMap[key]
+func (c *client) DeregisterConfig(key string, clientId int64) {
+	tmp := key + "/" + strconv.FormatInt(clientId, 10)
+	cancel := ctxMap[tmp]
 	cancel()
 }

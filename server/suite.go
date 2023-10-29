@@ -15,6 +15,8 @@
 package server
 
 import (
+	"sync/atomic"
+
 	"config-etcd/etcd"
 	"github.com/cloudwego/kitex/server"
 )
@@ -23,8 +25,11 @@ const (
 	limiterConfigName = "limit"
 )
 
+var num int64
+
 // EtcdServerSuite etcd server config suite, configure limiter config dynamically from etcd.
 type EtcdServerSuite struct {
+	uid        int64
 	etcdClient etcd.Client
 	service    string
 }
@@ -32,7 +37,10 @@ type EtcdServerSuite struct {
 // NewSuite service is the destination service.
 func NewSuite(service string, cli etcd.Client,
 ) *EtcdServerSuite {
+	atomic.AddInt64(&num, 1)
+	uid := atomic.LoadInt64(&num)
 	return &EtcdServerSuite{
+		uid:        uid,
 		service:    service,
 		etcdClient: cli,
 	}
@@ -41,6 +49,6 @@ func NewSuite(service string, cli etcd.Client,
 // Options return a list client.Option
 func (s *EtcdServerSuite) Options() []server.Option {
 	opts := make([]server.Option, 0, 2)
-	opts = append(opts, WithLimiter(s.service, s.etcdClient))
+	opts = append(opts, WithLimiter(s.service, s.etcdClient, s.uid))
 	return opts
 }
