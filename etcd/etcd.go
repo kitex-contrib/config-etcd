@@ -21,8 +21,9 @@ import (
 	"sync"
 	"text/template"
 
+	clientv3 "go.etcd.io/etcd/client/v3"
+
 	"github.com/cloudwego/kitex/pkg/klog"
-	"go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/mvcc/mvccpb"
 	"go.uber.org/zap"
 )
@@ -41,8 +42,8 @@ type Client interface {
 	SetParser(ConfigParser)
 	ClientConfigParam(cpc *ConfigParamConfig, cfs ...CustomFunction) (Key, error)
 	ServerConfigParam(cpc *ConfigParamConfig, cfs ...CustomFunction) (Key, error)
-	RegisterConfigCallback(ctx context.Context, key string, clientId int64, callback func(string, ConfigParser))
-	DeregisterConfig(key string, clientId int64)
+	RegisterConfigCallback(ctx context.Context, key string, clientKey int64, callback func(string, ConfigParser))
+	DeregisterConfig(key string, clientKey int64)
 }
 
 type client struct {
@@ -158,19 +159,19 @@ func (c *client) render(cpc *ConfigParamConfig, t *template.Template) (string, e
 }
 
 // RegisterConfigCallback register the callback function to etcd client.
-func (c *client) RegisterConfigCallback(ctx context.Context, key string, clientId int64, callback func(string, ConfigParser)) {
+func (c *client) RegisterConfigCallback(ctx context.Context, key string, clientKey int64, callback func(string, ConfigParser)) {
 	clientCtx, cancel := context.WithCancel(context.Background())
 	go func() {
-		select {
-		case <-clientCtx.Done():
-			return
-		default:
-			m.Lock()
-			tmp := key + "/" + strconv.FormatInt(clientId, 10)
-			ctxMap[tmp] = cancel
-			m.Unlock()
-			watchChan := c.ecli.Watch(ctx, key)
-			for watchResp := range watchChan {
+		m.Lock()
+		tmp := key + "/" + strconv.FormatInt(clientKey, 10)
+		ctxMap[tmp] = cancel
+		m.Unlock()
+		watchChan := c.ecli.Watch(ctx, key)
+		for {
+			select {
+			case <-clientCtx.Done():
+				return
+			case watchResp := <-watchChan:
 				for _, event := range watchResp.Events {
 					eventType := mvccpb.Event_EventType(event.Type)
 					// 检查事件类型
@@ -199,8 +200,8 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, clientI
 	callback(string(data.Kvs[0].Value), c.parser)
 }
 
-func (c *client) DeregisterConfig(key string, clientId int64) {
-	tmp := key + "/" + strconv.FormatInt(clientId, 10)
+func (c *client) DeregisterConfig(key string, clientKey int64) {
+	tmp := key + "/" + strconv.FormatInt(clientKey, 10)
 	cancel := ctxMap[tmp]
 	cancel()
 }

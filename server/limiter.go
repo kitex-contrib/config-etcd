@@ -27,7 +27,7 @@ import (
 )
 
 // WithLimiter sets the limiter config from etcd configuration center.
-func WithLimiter(dest string, etcdClient etcd.Client, clientId int64, cfs ...etcd.CustomFunction) server.Option {
+func WithLimiter(dest string, etcdClient etcd.Client, clientKey int64, cfs ...etcd.CustomFunction) server.Option {
 	param, err := etcdClient.ServerConfigParam(&etcd.ConfigParamConfig{
 		Category:          limiterConfigName,
 		ServerServiceName: dest,
@@ -35,11 +35,11 @@ func WithLimiter(dest string, etcdClient etcd.Client, clientId int64, cfs ...etc
 	if err != nil {
 		panic(err)
 	}
-	key := param.Prefix + "/" + dest + "/" + limiterConfigName
-	return server.WithLimit(initLimitOptions(key, clientId, etcdClient))
+	key := param.Prefix + "/" + param.Path
+	return server.WithLimit(initLimitOptions(key, clientKey, etcdClient))
 }
 
-func initLimitOptions(key string, clientId int64, etcdClient etcd.Client) *limit.Option {
+func initLimitOptions(key string, clientKey int64, etcdClient etcd.Client) *limit.Option {
 	var updater atomic.Value
 	opt := &limit.Option{}
 	opt.UpdateControl = func(u limit.Updater) {
@@ -65,6 +65,6 @@ func initLimitOptions(key string, clientId int64, etcdClient etcd.Client) *limit
 			klog.Warnf("[etcd] %s server etcd limiter config: data %s may do not take affect", key, data)
 		}
 	}
-	etcdClient.RegisterConfigCallback(context.Background(), key, clientId, onChangeCallback)
+	etcdClient.RegisterConfigCallback(context.Background(), key, clientKey, onChangeCallback)
 	return opt
 }
