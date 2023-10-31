@@ -17,6 +17,7 @@ package etcd
 import (
 	"bytes"
 	"context"
+	"go.etcd.io/etcd/api/v3/mvccpb"
 	"strconv"
 	"sync"
 	"text/template"
@@ -24,13 +25,12 @@ import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 
 	"github.com/cloudwego/kitex/pkg/klog"
-	"go.etcd.io/etcd/mvcc/mvccpb"
 	"go.uber.org/zap"
 )
 
 var (
 	m      sync.Mutex
-	ctxMap map[string]context.CancelFunc
+	ctxMap = make(map[string]context.CancelFunc)
 	Num    int64
 )
 
@@ -174,7 +174,7 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueI
 				return
 			case watchResp := <-watchChan:
 				for _, event := range watchResp.Events {
-					eventType := mvccpb.Event_EventType(event.Type)
+					eventType := event.Type
 					// 检查事件类型
 					if eventType == mvccpb.PUT {
 						// 配置被更新
@@ -197,7 +197,10 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueI
 		klog.Debugf("[etcd] key: %s config get value failed", key)
 		return
 	}
-
+	if data.Kvs == nil {
+		callback("", c.parser)
+		return
+	}
 	callback(string(data.Kvs[0].Value), c.parser)
 }
 

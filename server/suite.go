@@ -30,10 +30,12 @@ type EtcdServerSuite struct {
 	uid        int64
 	etcdClient etcd.Client
 	service    string
+	fns        []etcd.CustomFunction
 }
 
 // NewSuite service is the destination service.
 func NewSuite(service string, cli etcd.Client,
+	cfs ...etcd.CustomFunction,
 ) *EtcdServerSuite {
 	atomic.AddInt64(&etcd.Num, 1)
 	uid := atomic.LoadInt64(&etcd.Num)
@@ -41,6 +43,7 @@ func NewSuite(service string, cli etcd.Client,
 		uid:        uid,
 		service:    service,
 		etcdClient: cli,
+		fns:        cfs,
 	}
 }
 
