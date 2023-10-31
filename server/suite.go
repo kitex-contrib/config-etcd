@@ -17,8 +17,8 @@ package server
 import (
 	"sync/atomic"
 
-	"config-etcd/etcd"
 	"github.com/cloudwego/kitex/server"
+	"github.com/kitex-contrib/config-etcd/etcd"
 )
 
 const (

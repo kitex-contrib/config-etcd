@@ -18,7 +18,7 @@ import (
 	"context"
 	"sync/atomic"
 
-	"config-etcd/etcd"
+	"github.com/kitex-contrib/config-etcd/etcd"
 
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/limit"

@@ -1,4 +1,4 @@
-module config-etcd
+module github.com/kitex-contrib/config-etcd
 
 go 1.19
 
