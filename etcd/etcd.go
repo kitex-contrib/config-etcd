@@ -31,6 +31,7 @@ import (
 var (
 	m      sync.Mutex
 	ctxMap map[string]context.CancelFunc
+	Num    int64
 )
 
 type Key struct {

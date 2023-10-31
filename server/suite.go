@@ -25,8 +25,6 @@ const (
 	limiterConfigName = "limit"
 )
 
-var num int64
-
 // EtcdServerSuite etcd server config suite, configure limiter config dynamically from etcd.
 type EtcdServerSuite struct {
 	uid        int64
@@ -37,8 +35,8 @@ type EtcdServerSuite struct {
 // NewSuite service is the destination service.
 func NewSuite(service string, cli etcd.Client,
 ) *EtcdServerSuite {
-	atomic.AddInt64(&num, 1)
-	uid := atomic.LoadInt64(&num)
+	atomic.AddInt64(&etcd.Num, 1)
+	uid := atomic.LoadInt64(&etcd.Num)
 	return &EtcdServerSuite{
 		uid:        uid,
 		service:    service,
