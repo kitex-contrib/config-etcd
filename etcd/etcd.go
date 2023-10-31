@@ -42,8 +42,8 @@ type Client interface {
 	SetParser(ConfigParser)
 	ClientConfigParam(cpc *ConfigParamConfig, cfs ...CustomFunction) (Key, error)
 	ServerConfigParam(cpc *ConfigParamConfig, cfs ...CustomFunction) (Key, error)
-	RegisterConfigCallback(ctx context.Context, key string, clientKey int64, callback func(string, ConfigParser))
-	DeregisterConfig(key string, clientKey int64)
+	RegisterConfigCallback(ctx context.Context, key string, clientId int64, callback func(string, ConfigParser))
+	DeregisterConfig(key string, uniqueId int64)
 }
 
 type client struct {
@@ -159,11 +159,11 @@ func (c *client) render(cpc *ConfigParamConfig, t *template.Template) (string, e
 }
 
 // RegisterConfigCallback register the callback function to etcd client.
-func (c *client) RegisterConfigCallback(ctx context.Context, key string, clientKey int64, callback func(string, ConfigParser)) {
+func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueID int64, callback func(string, ConfigParser)) {
 	clientCtx, cancel := context.WithCancel(context.Background())
 	go func() {
 		m.Lock()
-		tmp := key + "/" + strconv.FormatInt(clientKey, 10)
+		tmp := key + "/" + strconv.FormatInt(uniqueID, 10)
 		ctxMap[tmp] = cancel
 		m.Unlock()
 		watchChan := c.ecli.Watch(ctx, key)
@@ -200,8 +200,10 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, clientK
 	callback(string(data.Kvs[0].Value), c.parser)
 }
 
-func (c *client) DeregisterConfig(key string, clientKey int64) {
-	tmp := key + "/" + strconv.FormatInt(clientKey, 10)
-	cancel := ctxMap[tmp]
+func (c *client) DeregisterConfig(key string, uniqueID int64) {
+	m.Lock()
+	clientKey := key + "/" + strconv.FormatInt(uniqueID, 10)
+	cancel := ctxMap[clientKey]
 	cancel()
+	m.Unlock()
 }
