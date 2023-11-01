@@ -15,10 +15,9 @@
 package server
 
 import (
-	"sync/atomic"
-
 	"github.com/cloudwego/kitex/server"
 	"github.com/kitex-contrib/config-etcd/etcd"
+	"github.com/kitex-contrib/config-etcd/utils"
 )
 
 const (
@@ -30,21 +29,23 @@ type EtcdServerSuite struct {
 	uid        int64
 	etcdClient etcd.Client
 	service    string
-	fns        []etcd.CustomFunction
+	opts       utils.Options
 }
 
 // NewSuite service is the destination service.
 func NewSuite(service string, cli etcd.Client,
-	cfs ...etcd.CustomFunction,
+	opts ...utils.Option,
 ) *EtcdServerSuite {
-	atomic.AddInt64(&etcd.Num, 1)
-	uid := atomic.LoadInt64(&etcd.Num)
-	return &EtcdServerSuite{
+	uid := etcd.AllocateUniqueID()
+	su := &EtcdServerSuite{
 		uid:        uid,
 		service:    service,
 		etcdClient: cli,
-		fns:        cfs,
 	}
+	for _, opt := range opts {
+		opt.Apply(&su.opts)
+	}
+	return su
 }
 
 // Options return a list client.Option

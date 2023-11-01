@@ -32,7 +32,6 @@ import (
 var (
 	m      sync.Mutex
 	ctxMap = make(map[string]context.CancelFunc)
-	Num    int64
 )
 
 type Key struct {
@@ -165,8 +164,8 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueI
 	clientCtx, cancel := context.WithCancel(context.Background())
 	go func() {
 		m.Lock()
-		tmp := key + "/" + strconv.FormatInt(uniqueID, 10)
-		ctxMap[tmp] = cancel
+		clientKey := key + "/" + strconv.FormatInt(uniqueID, 10)
+		ctxMap[clientKey] = cancel
 		m.Unlock()
 		watchChan := c.ecli.Watch(ctx, key)
 		for {
@@ -176,14 +175,14 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueI
 			case watchResp := <-watchChan:
 				for _, event := range watchResp.Events {
 					eventType := event.Type
-					// 检查事件类型
+					// check the event type
 					if eventType == mvccpb.PUT {
-						// 配置被更新
+						// config is updated
 						value := string(event.Kv.Value)
 						klog.Debugf("[etcd] config key: %s updated,value is %s", key, value)
 						callback(value, c.parser)
 					} else if eventType == mvccpb.DELETE {
-						// 配置被删除
+						// config is deleted
 						klog.Debugf("[etcd] config key: %s deleted", key)
 						callback("", c.parser)
 					}
