@@ -17,11 +17,12 @@ package etcd
 import (
 	"bytes"
 	"context"
-	"go.etcd.io/etcd/api/v3/mvccpb"
 	"strconv"
 	"sync"
 	"text/template"
 	"time"
+
+	"go.etcd.io/etcd/api/v3/mvccpb"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
 

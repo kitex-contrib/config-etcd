@@ -16,8 +16,9 @@ package server
 
 import (
 	"context"
-	"github.com/kitex-contrib/config-etcd/utils"
 	"sync/atomic"
+
+	"github.com/kitex-contrib/config-etcd/utils"
 
 	"github.com/kitex-contrib/config-etcd/etcd"
 
