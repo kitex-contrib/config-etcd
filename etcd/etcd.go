@@ -83,7 +83,7 @@ func New(opts Options) (Client, error) {
 		opts.Prefix = EtcdDefaultConfigPrefix
 	}
 	if opts.DialTimeout == 0 {
-		opts.DialTimeout = EtcdDefaultDialTimeOut
+		opts.DialTimeout = EtcdDefaultTimeout
 	}
 	if opts.ServerPathFormat == "" {
 		opts.ServerPathFormat = EtcdDefaultServerPath
