@@ -62,3 +62,5 @@ require (
 )
 
 replace github.com/kitex-contrib/config-etcd => ../
+
+replace github.com/apache/thrift v0.19.0 => github.com/apache/thrift v0.13.0

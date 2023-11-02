@@ -16,11 +16,13 @@ package etcd
 
 import (
 	"encoding/json"
+	"time"
 )
 
 const (
 	EtcdDefaultNode         = "http://127.0.0.1:2379"
 	EtcdDefaultConfigPrefix = "KitexConfig"
+	EtcdDefaultDialTimeOut  = 5 * time.Second
 	EtcdDefaultClientPath   = "{{.ClientServiceName}}/{{.ServerServiceName}}/{{.Category}}"
 	EtcdDefaultServerPath   = "{{.ServerServiceName}}/{{.Category}}"
 )

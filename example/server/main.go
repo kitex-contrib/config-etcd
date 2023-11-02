@@ -15,8 +15,6 @@ package main
 
 import (
 	"context"
-	"log"
-
 	"github.com/cloudwego/kitex-examples/kitex_gen/api"
 	"github.com/cloudwego/kitex-examples/kitex_gen/api/echo"
 	"github.com/cloudwego/kitex/pkg/klog"
@@ -24,6 +22,7 @@ import (
 	"github.com/cloudwego/kitex/server"
 	"github.com/kitex-contrib/config-etcd/etcd"
 	etcdServer "github.com/kitex-contrib/config-etcd/server"
+	"log"
 )
 
 var _ api.Echo = &EchoImpl{}

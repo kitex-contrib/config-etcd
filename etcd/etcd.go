@@ -17,11 +17,11 @@ package etcd
 import (
 	"bytes"
 	"context"
+	"go.etcd.io/etcd/api/v3/mvccpb"
 	"strconv"
 	"sync"
 	"text/template"
-
-	"go.etcd.io/etcd/api/v3/mvccpb"
+	"time"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
 
@@ -51,6 +51,7 @@ type client struct {
 	ecli *clientv3.Client
 	// support customise parser
 	parser             ConfigParser
+	etcdDialTimeout    time.Duration
 	prefixTemplate     *template.Template
 	serverPathTemplate *template.Template
 	clientPathTemplate *template.Template
@@ -62,6 +63,7 @@ type Options struct {
 	Prefix           string
 	ServerPathFormat string
 	clientPathFormat string
+	DialTimeout      time.Duration
 	LoggerConfig     *zap.Config
 	ConfigParser     ConfigParser
 }
@@ -78,6 +80,9 @@ func New(opts Options) (Client, error) {
 	}
 	if opts.Prefix == "" {
 		opts.Prefix = EtcdDefaultConfigPrefix
+	}
+	if opts.DialTimeout == 0 {
+		opts.DialTimeout = EtcdDefaultDialTimeOut
 	}
 	if opts.ServerPathFormat == "" {
 		opts.ServerPathFormat = EtcdDefaultServerPath
@@ -107,6 +112,7 @@ func New(opts Options) (Client, error) {
 	c := &client{
 		ecli:               etcdClient,
 		parser:             opts.ConfigParser,
+		etcdDialTimeout:    opts.DialTimeout,
 		prefixTemplate:     prefixTemplate,
 		serverPathTemplate: serverNameTemplate,
 		clientPathTemplate: clientNameTemplate,
@@ -190,8 +196,9 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueI
 			}
 		}
 	}()
-
-	data, err := c.ecli.Get(context.Background(), key)
+	ctx, cancel = context.WithTimeout(context.Background(), c.etcdDialTimeout)
+	defer cancel()
+	data, err := c.ecli.Get(ctx, key)
 	// the etcd client has handled the not exist error.
 	if err != nil {
 		klog.Debugf("[etcd] key: %s config get value failed", key)

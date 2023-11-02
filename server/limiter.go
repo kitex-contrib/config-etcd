@@ -16,6 +16,7 @@ package server
 
 import (
 	"context"
+	"github.com/kitex-contrib/config-etcd/utils"
 	"sync/atomic"
 
 	"github.com/kitex-contrib/config-etcd/etcd"
@@ -27,19 +28,22 @@ import (
 )
 
 // WithLimiter sets the limiter config from etcd configuration center.
-func WithLimiter(dest string, etcdClient etcd.Client, uniqueID int64, cfs ...etcd.CustomFunction) []server.Option {
+func WithLimiter(dest string, etcdClient etcd.Client, uniqueID int64, opts utils.Options) server.Option {
 	param, err := etcdClient.ServerConfigParam(&etcd.ConfigParamConfig{
 		Category:          limiterConfigName,
 		ServerServiceName: dest,
-	}, cfs...)
+	})
 	if err != nil {
 		panic(err)
+	}
+	for _, f := range opts.EtcdCustomFunctions {
+		f(&param)
 	}
 	key := param.Prefix + "/" + param.Path
 	server.RegisterShutdownHook(func() {
 		etcdClient.DeregisterConfig(key, uniqueID)
 	})
-	return []server.Option{server.WithLimit(initLimitOptions(key, uniqueID, etcdClient))}
+	return server.WithLimit(initLimitOptions(key, uniqueID, etcdClient))
 }
 
 func initLimitOptions(key string, uniqueID int64, etcdClient etcd.Client) *limit.Option {
@@ -51,6 +55,10 @@ func initLimitOptions(key string, uniqueID int64, etcdClient etcd.Client) *limit
 		updater.Store(u)
 	}
 	onChangeCallback := func(data string, parser etcd.ConfigParser) {
+		if data == "" {
+			klog.Warnf("[etcd] %s server etcd limiter config: get config failed: empty config, skip...", key)
+			return
+		}
 		lc := &limiter.LimiterConfig{}
 		err := parser.Decode(data, lc)
 		if err != nil {
