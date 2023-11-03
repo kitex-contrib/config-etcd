@@ -197,9 +197,9 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueI
 			}
 		}
 	}()
-	ctx, cancel = context.WithTimeout(context.Background(), c.etcdTimeout)
+	ctx2, cancel := context.WithTimeout(context.Background(), c.etcdTimeout)
 	defer cancel()
-	data, err := c.ecli.Get(ctx, key)
+	data, err := c.ecli.Get(ctx2, key)
 	// the etcd client has handled the not exist error.
 	if err != nil {
 		klog.Debugf("[etcd] key: %s config get value failed", key)
