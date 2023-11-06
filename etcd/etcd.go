@@ -69,10 +69,10 @@ type Options struct {
 	ConfigParser     ConfigParser
 }
 
-// New Create a default etcd client
+// NewClient Create a default etcd client
 // It can create a client with default config by env variable.
 // See: env.go
-func New(opts Options) (Client, error) {
+func NewClient(opts Options) (Client, error) {
 	if opts.Node == nil {
 		opts.Node = []string{EtcdDefaultNode}
 	}
@@ -168,8 +168,8 @@ func (c *client) render(cpc *ConfigParamConfig, t *template.Template) (string, e
 
 // RegisterConfigCallback register the callback function to etcd client.
 func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueID int64, callback func(string, ConfigParser)) {
-	clientCtx, cancel := context.WithCancel(context.Background())
 	go func() {
+		clientCtx, cancel := context.WithCancel(context.Background())
 		m.Lock()
 		clientKey := key + "/" + strconv.FormatInt(uniqueID, 10)
 		ctxMap[clientKey] = cancel

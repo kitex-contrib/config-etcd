@@ -40,7 +40,7 @@ func (cl *configLog) Apply(opt *utils.Options) {
 func main() {
 	klog.SetLevel(klog.LevelDebug)
 
-	etcdClient, err := etcd.New(etcd.Options{})
+	etcdClient, err := etcd.NewClient(etcd.Options{})
 	if err != nil {
 		panic(err)
 	}

@@ -42,12 +42,12 @@ func WithRetryPolicy(dest, src string, etcdClient etcd.Client, uniqueID int64, o
 	rc := initRetryContainer(key, dest, etcdClient, uniqueID)
 	return []client.Option{
 		client.WithRetryContainer(rc),
-		client.WithCloseCallbacks(rc.Close),
 		client.WithCloseCallbacks(func() error {
 			// cancel the configuration listener when client is closed.
 			etcdClient.DeregisterConfig(key, uniqueID)
 			return nil
 		}),
+		client.WithCloseCallbacks(rc.Close),
 	}
 }
 

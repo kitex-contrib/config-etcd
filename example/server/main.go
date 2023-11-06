@@ -40,7 +40,7 @@ func (s *EchoImpl) Echo(ctx context.Context, req *api.Request) (resp *api.Respon
 func main() {
 	klog.SetLevel(klog.LevelDebug)
 	serviceName := "ServiceName"
-	etcdClient, _ := etcd.New(etcd.Options{})
+	etcdClient, _ := etcd.NewClient(etcd.Options{})
 	svr := echo.NewServer(
 		new(EchoImpl),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: serviceName}),

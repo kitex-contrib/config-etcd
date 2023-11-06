@@ -46,12 +46,12 @@ func WithCircuitBreaker(dest, src string, etcdClient etcd.Client, uniqueID int64
 	return []client.Option{
 		client.WithCircuitBreaker(cbSuite),
 		client.WithCloseCallbacks(func() error {
-			err := cbSuite.Close()
+			// cancel the configuration listener when client is closed.
+			etcdClient.DeregisterConfig(key, uniqueID)
+			err = cbSuite.Close()
 			if err != nil {
 				return err
 			}
-			// cancel the configuration listener when client is closed.
-			etcdClient.DeregisterConfig(key, uniqueID)
 			return nil
 		}),
 	}
