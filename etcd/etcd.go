@@ -206,7 +206,7 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueI
 		return
 	}
 	if data.Kvs == nil {
-		callback("", c.parser)
+		callback("config_empty", c.parser)
 		return
 	}
 	callback(string(data.Kvs[0].Value), c.parser)

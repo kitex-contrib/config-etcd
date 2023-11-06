@@ -56,7 +56,7 @@ func initRPCTimeoutContainer(key, dest string,
 	rpcTimeoutContainer := rpctimeout.NewContainer()
 
 	onChangeCallback := func(data string, parser etcd.ConfigParser) {
-		if data == "" {
+		if data == "config_empty" {
 			klog.Debugf("[etcd] %s client etcd rpc timeout: get config failed: empty config, skip...", key)
 			return
 		}

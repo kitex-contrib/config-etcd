@@ -83,7 +83,7 @@ func initCircuitBreaker(key, dest, src string,
 	lcb := utils.ThreadSafeSet{}
 
 	onChangeCallback := func(data string, parser etcd.ConfigParser) {
-		if data == "" {
+		if data == "config_empty" {
 			klog.Debugf("[etcd] %s client etcd circuit breaker: get config failed: empty config, skip...", key)
 			return
 		}

@@ -59,7 +59,7 @@ func initRetryContainer(key, dest string,
 	ts := utils.ThreadSafeSet{}
 
 	onChangeCallback := func(data string, parser etcd.ConfigParser) {
-		if data == "" {
+		if data == "config_empty" {
 			klog.Debugf("[etcd] %s client etcd retry: get config failed: empty config, skip...", key)
 			return
 		}

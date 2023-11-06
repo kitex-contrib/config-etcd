@@ -56,7 +56,7 @@ func initLimitOptions(key string, uniqueID int64, etcdClient etcd.Client) *limit
 		updater.Store(u)
 	}
 	onChangeCallback := func(data string, parser etcd.ConfigParser) {
-		if data == "" {
+		if data == "config_empty" {
 			klog.Debugf("[etcd] %s server etcd limiter config: get config failed: empty config, skip...", key)
 			return
 		}
