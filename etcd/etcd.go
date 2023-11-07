@@ -44,7 +44,7 @@ type Client interface {
 	SetParser(ConfigParser)
 	ClientConfigParam(cpc *ConfigParamConfig, cfs ...CustomFunction) (Key, error)
 	ServerConfigParam(cpc *ConfigParamConfig, cfs ...CustomFunction) (Key, error)
-	RegisterConfigCallback(ctx context.Context, key string, clientId int64, callback func(string, ConfigParser))
+	RegisterConfigCallback(ctx context.Context, key string, clientId int64, callback func(mvccpb.Event_EventType, string, ConfigParser))
 	DeregisterConfig(key string, uniqueId int64)
 }
 
@@ -167,7 +167,7 @@ func (c *client) render(cpc *ConfigParamConfig, t *template.Template) (string, e
 }
 
 // RegisterConfigCallback register the callback function to etcd client.
-func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueID int64, callback func(string, ConfigParser)) {
+func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueID int64, callback func(mvccpb.Event_EventType, string, ConfigParser)) {
 	go func() {
 		clientCtx, cancel := context.WithCancel(context.Background())
 		m.Lock()
@@ -187,11 +187,11 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueI
 						// config is updated
 						value := string(event.Kv.Value)
 						klog.Debugf("[etcd] config key: %s updated,value is %s", key, value)
-						callback(value, c.parser)
+						callback(mvccpb.PUT, value, c.parser)
 					} else if eventType == mvccpb.DELETE {
 						// config is deleted
 						klog.Debugf("[etcd] config key: %s deleted", key)
-						callback("", c.parser)
+						callback(mvccpb.DELETE, "", c.parser)
 					}
 				}
 			}
@@ -206,10 +206,10 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueI
 		return
 	}
 	if data.Kvs == nil {
-		callback("config_empty", c.parser)
+		callback(mvccpb.PUT, "", c.parser)
 		return
 	}
-	callback(string(data.Kvs[0].Value), c.parser)
+	callback(mvccpb.PUT, string(data.Kvs[0].Value), c.parser)
 }
 
 func (c *client) DeregisterConfig(key string, uniqueID int64) {

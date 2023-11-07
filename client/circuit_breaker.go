@@ -16,6 +16,7 @@ package client
 
 import (
 	"context"
+	"go.etcd.io/etcd/api/v3/mvccpb"
 	"strings"
 
 	"github.com/cloudwego/kitex/client"
@@ -82,8 +83,8 @@ func initCircuitBreaker(key, dest, src string,
 	cb := circuitbreak.NewCBSuite(genServiceCBKeyWithRPCInfo)
 	lcb := utils.ThreadSafeSet{}
 
-	onChangeCallback := func(data string, parser etcd.ConfigParser) {
-		if data == "config_empty" {
+	onChangeCallback := func(eventType mvccpb.Event_EventType, data string, parser etcd.ConfigParser) {
+		if data == "" && eventType == mvccpb.PUT {
 			klog.Debugf("[etcd] %s client etcd circuit breaker: get config failed: empty config, skip...", key)
 			return
 		}

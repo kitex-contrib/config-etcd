@@ -16,6 +16,7 @@ package client
 
 import (
 	"context"
+	"go.etcd.io/etcd/api/v3/mvccpb"
 
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/klog"
@@ -55,8 +56,8 @@ func initRPCTimeoutContainer(key, dest string,
 ) rpcinfo.TimeoutProvider {
 	rpcTimeoutContainer := rpctimeout.NewContainer()
 
-	onChangeCallback := func(data string, parser etcd.ConfigParser) {
-		if data == "config_empty" {
+	onChangeCallback := func(eventType mvccpb.Event_EventType, data string, parser etcd.ConfigParser) {
+		if data == "" && eventType == mvccpb.PUT {
 			klog.Debugf("[etcd] %s client etcd rpc timeout: get config failed: empty config, skip...", key)
 			return
 		}

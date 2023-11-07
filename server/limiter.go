@@ -16,6 +16,7 @@ package server
 
 import (
 	"context"
+	"go.etcd.io/etcd/api/v3/mvccpb"
 	"sync/atomic"
 
 	"github.com/kitex-contrib/config-etcd/utils"
@@ -55,8 +56,8 @@ func initLimitOptions(key string, uniqueID int64, etcdClient etcd.Client) *limit
 		u.UpdateLimit(opt)
 		updater.Store(u)
 	}
-	onChangeCallback := func(data string, parser etcd.ConfigParser) {
-		if data == "config_empty" {
+	onChangeCallback := func(eventType mvccpb.Event_EventType, data string, parser etcd.ConfigParser) {
+		if data == "" && eventType == mvccpb.PUT {
 			klog.Debugf("[etcd] %s server etcd limiter config: get config failed: empty config, skip...", key)
 			return
 		}
