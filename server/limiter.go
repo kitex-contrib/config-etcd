@@ -16,8 +16,9 @@ package server
 
 import (
 	"context"
-	"go.etcd.io/etcd/api/v3/mvccpb"
 	"sync/atomic"
+
+	"go.etcd.io/etcd/api/v3/mvccpb"
 
 	"github.com/kitex-contrib/config-etcd/utils"
 

@@ -16,8 +16,9 @@ package client
 
 import (
 	"context"
-	"go.etcd.io/etcd/api/v3/mvccpb"
 	"strings"
+
+	"go.etcd.io/etcd/api/v3/mvccpb"
 
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/circuitbreak"
