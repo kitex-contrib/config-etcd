@@ -25,8 +25,6 @@ import (
 	"github.com/kitex-contrib/config-etcd/utils"
 )
 
-const defaultTimeoutConfig = "{\"*\": {\"conn_timeout_ms\": 100,\"rpc_timeout_ms\": 2000}}"
-
 // WithRPCTimeout sets the RPC timeout policy from etcd configuration center.
 func WithRPCTimeout(dest, src string, etcdClient etcd.Client, uniqueID int64, opts utils.Options) []client.Option {
 	param, err := etcdClient.ClientConfigParam(&etcd.ConfigParamConfig{
@@ -57,16 +55,14 @@ func initRPCTimeoutContainer(key, dest string,
 ) rpcinfo.TimeoutProvider {
 	rpcTimeoutContainer := rpctimeout.NewContainer()
 
-	onChangeCallback := func(isDefault bool, data string, parser etcd.ConfigParser) {
-		if isDefault {
-			data = defaultTimeoutConfig
-			klog.Debugf("[etcd] %s server etcd retry config: adapt the default config", key)
-		}
+	onChangeCallback := func(restoreDefault bool, data string, parser etcd.ConfigParser) {
 		configs := map[string]*rpctimeout.RPCTimeout{}
-		err := parser.Decode(data, &configs)
-		if err != nil {
-			klog.Warnf("[etcd] %s client etcd rpc timeout: unmarshal data %s failed: %s, skip...", key, data, err)
-			return
+		if !restoreDefault {
+			err := parser.Decode(data, &configs)
+			if err != nil {
+				klog.Warnf("[etcd] %s client etcd rpc timeout: unmarshal data %s failed: %s, skip...", key, data, err)
+				return
+			}
 		}
 		rpcTimeoutContainer.NotifyPolicyChange(configs)
 	}

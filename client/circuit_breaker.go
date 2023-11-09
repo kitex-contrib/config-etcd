@@ -18,9 +18,10 @@ import (
 	"context"
 	"strings"
 
+	"github.com/cloudwego/kitex/pkg/klog"
+
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/circuitbreak"
-	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/kitex-contrib/config-etcd/etcd"
 	"github.com/kitex-contrib/config-etcd/utils"
@@ -82,17 +83,16 @@ func initCircuitBreaker(key, dest, src string,
 	cb := circuitbreak.NewCBSuite(genServiceCBKeyWithRPCInfo)
 	lcb := utils.ThreadSafeSet{}
 
-	onChangeCallback := func(isDefault bool, data string, parser etcd.ConfigParser) {
-		if isDefault {
-			data = "{}"
-			klog.Debugf("[etcd] %s server etcd retry config: adapt the default config", key)
-		}
+	onChangeCallback := func(restoreDefault bool, data string, parser etcd.ConfigParser) {
 		set := utils.Set{}
 		configs := map[string]circuitbreak.CBConfig{}
-		err := parser.Decode(data, &configs)
-		if err != nil {
-			klog.Warnf("[etcd] %s client etcd circuit breaker: unmarshal data %s failed: %s, skip...", key, data, err)
-			return
+
+		if !restoreDefault {
+			err := parser.Decode(data, &configs)
+			if err != nil {
+				klog.Warnf("[etcd] %s client etcd circuit breaker: unmarshal data %s failed: %s, skip...", key, data, err)
+				return
+			}
 		}
 
 		for method, config := range configs {

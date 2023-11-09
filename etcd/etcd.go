@@ -44,7 +44,7 @@ type Client interface {
 	SetParser(ConfigParser)
 	ClientConfigParam(cpc *ConfigParamConfig, cfs ...CustomFunction) (Key, error)
 	ServerConfigParam(cpc *ConfigParamConfig, cfs ...CustomFunction) (Key, error)
-	RegisterConfigCallback(ctx context.Context, key string, clientId int64, callback func(bool, string, ConfigParser))
+	RegisterConfigCallback(ctx context.Context, key string, clientId int64, callback func(restoreDefault bool, data string, parser ConfigParser))
 	DeregisterConfig(key string, uniqueId int64)
 }
 
@@ -206,7 +206,6 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueI
 		return
 	}
 	if data.Count == 0 {
-		callback(true, "", c.parser)
 		return
 	}
 	callback(false, string(data.Kvs[0].Value), c.parser)

@@ -24,7 +24,7 @@ import (
 	"github.com/kitex-contrib/config-etcd/utils"
 )
 
-const defaultRetryConfig = "{\"*\":{\"enable\": true,\"type\": 0,\"failure_policy\": {\"stop_policy\":{\"max_retry_times\": 3,\"max_duration_ms\": 2000,\"cb_policy\": {\"error_rate\": 0.1}},\"backoff_policy\":{\"backoff_type\": \"fixed\",\"cfg_items\": {\"fix_ms\": 50}}}}}"
+const defaultRetryConfig = "{}"
 
 // WithRetryPolicy sets the retry policy from etcd configuration center.
 func WithRetryPolicy(dest, src string, etcdClient etcd.Client, uniqueID int64, opts utils.Options) []client.Option {
@@ -60,17 +60,16 @@ func initRetryContainer(key, dest string,
 
 	ts := utils.ThreadSafeSet{}
 
-	onChangeCallback := func(isDefault bool, data string, parser etcd.ConfigParser) {
-		if isDefault {
-			data = defaultRetryConfig
-			klog.Debugf("[etcd] %s server etcd retry config: adapt the default config", key)
-		}
+	onChangeCallback := func(restoreDefault bool, data string, parser etcd.ConfigParser) {
 		// the key is method name, wildcard "*" can match anything.
 		rcs := map[string]*retry.Policy{}
-		err := parser.Decode(data, &rcs)
-		if err != nil {
-			klog.Warnf("[etcd] %s client etcd retry: unmarshal data %s failed: %s, skip...", key, data, err)
-			return
+
+		if !restoreDefault {
+			err := parser.Decode(data, &rcs)
+			if err != nil {
+				klog.Warnf("[etcd] %s client etcd retry: unmarshal data %s failed: %s, skip...", key, data, err)
+				return
+			}
 		}
 
 		set := utils.Set{}
