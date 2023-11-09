@@ -24,8 +24,6 @@ import (
 	"github.com/kitex-contrib/config-etcd/utils"
 )
 
-const defaultRetryConfig = "{}"
-
 // WithRetryPolicy sets the retry policy from etcd configuration center.
 func WithRetryPolicy(dest, src string, etcdClient etcd.Client, uniqueID int64, opts utils.Options) []client.Option {
 	param, err := etcdClient.ClientConfigParam(&etcd.ConfigParamConfig{
