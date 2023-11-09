@@ -16,9 +16,8 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"sync/atomic"
-
-	"go.etcd.io/etcd/api/v3/mvccpb"
 
 	"github.com/kitex-contrib/config-etcd/utils"
 
@@ -29,6 +28,8 @@ import (
 	"github.com/cloudwego/kitex/pkg/limiter"
 	"github.com/cloudwego/kitex/server"
 )
+
+const defaultLimitConfig = "{\"connection_limit\": 100,\"qps_limit\": 200}"
 
 // WithLimiter sets the limiter config from etcd configuration center.
 func WithLimiter(dest string, etcdClient etcd.Client, uniqueID int64, opts utils.Options) server.Option {
@@ -57,10 +58,10 @@ func initLimitOptions(key string, uniqueID int64, etcdClient etcd.Client) *limit
 		u.UpdateLimit(opt)
 		updater.Store(u)
 	}
-	onChangeCallback := func(eventType mvccpb.Event_EventType, data string, parser etcd.ConfigParser) {
-		if data == "" && eventType == mvccpb.PUT {
-			klog.Debugf("[etcd] %s server etcd limiter config: get config failed: empty config, skip...", key)
-			return
+	onChangeCallback := func(isDefault bool, data string, parser etcd.ConfigParser) {
+		if isDefault {
+			data = defaultLimitConfig
+			klog.Debugf("[etcd] %s server etcd limiter config: adapt the default config", key)
 		}
 		lc := &limiter.LimiterConfig{}
 		err := parser.Decode(data, lc)
@@ -70,6 +71,7 @@ func initLimitOptions(key string, uniqueID int64, etcdClient etcd.Client) *limit
 		}
 		opt.MaxConnections = int(lc.ConnectionLimit)
 		opt.MaxQPS = int(lc.QPSLimit)
+		fmt.Println(opt)
 		u := updater.Load()
 		if u == nil {
 			klog.Warnf("[etcd] %s server etcd limiter config failed as the updater is empty", key)

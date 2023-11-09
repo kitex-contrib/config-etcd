@@ -17,8 +17,6 @@ package client
 import (
 	"context"
 
-	"go.etcd.io/etcd/api/v3/mvccpb"
-
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
@@ -26,6 +24,8 @@ import (
 	"github.com/kitex-contrib/config-etcd/etcd"
 	"github.com/kitex-contrib/config-etcd/utils"
 )
+
+const defaultTimeoutConfig = "{\"*\": {\"conn_timeout_ms\": 100,\"rpc_timeout_ms\": 2000}}"
 
 // WithRPCTimeout sets the RPC timeout policy from etcd configuration center.
 func WithRPCTimeout(dest, src string, etcdClient etcd.Client, uniqueID int64, opts utils.Options) []client.Option {
@@ -57,10 +57,10 @@ func initRPCTimeoutContainer(key, dest string,
 ) rpcinfo.TimeoutProvider {
 	rpcTimeoutContainer := rpctimeout.NewContainer()
 
-	onChangeCallback := func(eventType mvccpb.Event_EventType, data string, parser etcd.ConfigParser) {
-		if data == "" && eventType == mvccpb.PUT {
-			klog.Debugf("[etcd] %s client etcd rpc timeout: get config failed: empty config, skip...", key)
-			return
+	onChangeCallback := func(isDefault bool, data string, parser etcd.ConfigParser) {
+		if isDefault {
+			data = defaultTimeoutConfig
+			klog.Debugf("[etcd] %s server etcd retry config: adapt the default config", key)
 		}
 		configs := map[string]*rpctimeout.RPCTimeout{}
 		err := parser.Decode(data, &configs)

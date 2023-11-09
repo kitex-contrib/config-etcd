@@ -17,14 +17,14 @@ package client
 import (
 	"context"
 
-	"go.etcd.io/etcd/api/v3/mvccpb"
-
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/retry"
 	"github.com/kitex-contrib/config-etcd/etcd"
 	"github.com/kitex-contrib/config-etcd/utils"
 )
+
+const defaultRetryConfig = "{\"*\":{\"enable\": true,\"type\": 0,\"failure_policy\": {\"stop_policy\":{\"max_retry_times\": 3,\"max_duration_ms\": 2000,\"cb_policy\": {\"error_rate\": 0.1}},\"backoff_policy\":{\"backoff_type\": \"fixed\",\"cfg_items\": {\"fix_ms\": 50}}}}}"
 
 // WithRetryPolicy sets the retry policy from etcd configuration center.
 func WithRetryPolicy(dest, src string, etcdClient etcd.Client, uniqueID int64, opts utils.Options) []client.Option {
@@ -60,10 +60,10 @@ func initRetryContainer(key, dest string,
 
 	ts := utils.ThreadSafeSet{}
 
-	onChangeCallback := func(eventType mvccpb.Event_EventType, data string, parser etcd.ConfigParser) {
-		if data == "" && eventType == mvccpb.PUT {
-			klog.Debugf("[etcd] %s client etcd retry: get config failed: empty config, skip...", key)
-			return
+	onChangeCallback := func(isDefault bool, data string, parser etcd.ConfigParser) {
+		if isDefault {
+			data = defaultRetryConfig
+			klog.Debugf("[etcd] %s server etcd retry config: adapt the default config", key)
 		}
 		// the key is method name, wildcard "*" can match anything.
 		rcs := map[string]*retry.Policy{}

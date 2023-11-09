@@ -44,7 +44,7 @@ type Client interface {
 	SetParser(ConfigParser)
 	ClientConfigParam(cpc *ConfigParamConfig, cfs ...CustomFunction) (Key, error)
 	ServerConfigParam(cpc *ConfigParamConfig, cfs ...CustomFunction) (Key, error)
-	RegisterConfigCallback(ctx context.Context, key string, clientId int64, callback func(mvccpb.Event_EventType, string, ConfigParser))
+	RegisterConfigCallback(ctx context.Context, key string, clientId int64, callback func(bool, string, ConfigParser))
 	DeregisterConfig(key string, uniqueId int64)
 }
 
@@ -167,7 +167,7 @@ func (c *client) render(cpc *ConfigParamConfig, t *template.Template) (string, e
 }
 
 // RegisterConfigCallback register the callback function to etcd client.
-func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueID int64, callback func(mvccpb.Event_EventType, string, ConfigParser)) {
+func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueID int64, callback func(bool, string, ConfigParser)) {
 	go func() {
 		clientCtx, cancel := context.WithCancel(context.Background())
 		m.Lock()
@@ -187,11 +187,11 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueI
 						// config is updated
 						value := string(event.Kv.Value)
 						klog.Debugf("[etcd] config key: %s updated,value is %s", key, value)
-						callback(mvccpb.PUT, value, c.parser)
+						callback(false, value, c.parser)
 					} else if eventType == mvccpb.DELETE {
 						// config is deleted
 						klog.Debugf("[etcd] config key: %s deleted", key)
-						callback(mvccpb.DELETE, "", c.parser)
+						callback(true, "", c.parser)
 					}
 				}
 			}
@@ -205,11 +205,11 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueI
 		klog.Debugf("[etcd] key: %s config get value failed", key)
 		return
 	}
-	if data.Kvs == nil {
-		callback(mvccpb.PUT, "", c.parser)
+	if data.Count == 0 {
+		callback(true, "", c.parser)
 		return
 	}
-	callback(mvccpb.PUT, string(data.Kvs[0].Value), c.parser)
+	callback(false, string(data.Kvs[0].Value), c.parser)
 }
 
 func (c *client) DeregisterConfig(key string, uniqueID int64) {

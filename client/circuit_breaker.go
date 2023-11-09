@@ -18,8 +18,6 @@ import (
 	"context"
 	"strings"
 
-	"go.etcd.io/etcd/api/v3/mvccpb"
-
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/circuitbreak"
 	"github.com/cloudwego/kitex/pkg/klog"
@@ -84,10 +82,9 @@ func initCircuitBreaker(key, dest, src string,
 	cb := circuitbreak.NewCBSuite(genServiceCBKeyWithRPCInfo)
 	lcb := utils.ThreadSafeSet{}
 
-	onChangeCallback := func(eventType mvccpb.Event_EventType, data string, parser etcd.ConfigParser) {
-		if data == "" && eventType == mvccpb.PUT {
-			klog.Debugf("[etcd] %s client etcd circuit breaker: get config failed: empty config, skip...", key)
-			return
+	onChangeCallback := func(isDefault bool, data string, parser etcd.ConfigParser) {
+		if isDefault {
+			klog.Debugf("[etcd] %s server etcd retry config: adapt the default config", key)
 		}
 		set := utils.Set{}
 		configs := map[string]circuitbreak.CBConfig{}
