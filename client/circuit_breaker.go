@@ -84,6 +84,7 @@ func initCircuitBreaker(key, dest, src string,
 
 	onChangeCallback := func(isDefault bool, data string, parser etcd.ConfigParser) {
 		if isDefault {
+			data = "{}"
 			klog.Debugf("[etcd] %s server etcd retry config: adapt the default config", key)
 		}
 		set := utils.Set{}
