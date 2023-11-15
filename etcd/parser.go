@@ -21,7 +21,7 @@ import (
 
 const (
 	EtcdDefaultNode         = "http://127.0.0.1:2379"
-	EtcdDefaultConfigPrefix = "KitexConfig"
+	EtcdDefaultConfigPrefix = "/KitexConfig"
 	EtcdDefaultTimeout      = 5 * time.Second
 	EtcdDefaultClientPath   = "{{.ClientServiceName}}/{{.ServerServiceName}}/{{.Category}}"
 	EtcdDefaultServerPath   = "{{.ServerServiceName}}/{{.Category}}"
