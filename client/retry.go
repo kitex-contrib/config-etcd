@@ -38,7 +38,7 @@ func WithRetryPolicy(dest, src string, etcdClient etcd.Client, uniqueID int64, o
 	for _, f := range opts.EtcdCustomFunctions {
 		f(&param)
 	}
-	key := param.Prefix + "/" + param.Path
+	key := "/" + param.Prefix + "/" + param.Path
 	rc := initRetryContainer(key, dest, etcdClient, uniqueID)
 	return []client.Option{
 		client.WithRetryContainer(rc),

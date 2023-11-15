@@ -39,7 +39,7 @@ func WithRPCTimeout(dest, src string, etcdClient etcd.Client, uniqueID int64, op
 	for _, f := range opts.EtcdCustomFunctions {
 		f(&param)
 	}
-	key := param.Prefix + "/" + param.Path
+	key := "/" + param.Prefix + "/" + param.Path
 	return []client.Option{
 		client.WithTimeoutProvider(initRPCTimeoutContainer(key, dest, etcdClient, uniqueID)),
 		client.WithCloseCallbacks(func() error {

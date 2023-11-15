@@ -30,10 +30,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
-	m      sync.Mutex
-	ctxMap = make(map[string]context.CancelFunc)
-)
+var m sync.Mutex
 
 type Key struct {
 	Prefix string
@@ -56,6 +53,7 @@ type client struct {
 	prefixTemplate     *template.Template
 	serverPathTemplate *template.Template
 	clientPathTemplate *template.Template
+	cancelMap          map[string]context.CancelFunc
 }
 
 // Options etcd config options. All the fields have default value.
@@ -117,6 +115,7 @@ func NewClient(opts Options) (Client, error) {
 		prefixTemplate:     prefixTemplate,
 		serverPathTemplate: serverNameTemplate,
 		clientPathTemplate: clientNameTemplate,
+		cancelMap:          make(map[string]context.CancelFunc),
 	}
 	return c, nil
 }
@@ -170,10 +169,7 @@ func (c *client) render(cpc *ConfigParamConfig, t *template.Template) (string, e
 func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueID int64, callback func(bool, string, ConfigParser)) {
 	go func() {
 		clientCtx, cancel := context.WithCancel(context.Background())
-		m.Lock()
-		clientKey := key + "/" + strconv.FormatInt(uniqueID, 10)
-		ctxMap[clientKey] = cancel
-		m.Unlock()
+		c.register(key, uniqueID, cancel)
 		watchChan := c.ecli.Watch(ctx, key)
 		for {
 			select {
@@ -214,7 +210,14 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueI
 func (c *client) DeregisterConfig(key string, uniqueID int64) {
 	m.Lock()
 	clientKey := key + "/" + strconv.FormatInt(uniqueID, 10)
-	cancel := ctxMap[clientKey]
+	cancel := c.cancelMap[clientKey]
 	cancel()
+	m.Unlock()
+}
+
+func (c *client) register(key string, uniqueID int64, cancel context.CancelFunc) {
+	m.Lock()
+	clientKey := key + "/" + strconv.FormatInt(uniqueID, 10)
+	c.cancelMap[clientKey] = cancel
 	m.Unlock()
 }

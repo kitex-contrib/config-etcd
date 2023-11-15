@@ -41,7 +41,7 @@ func WithCircuitBreaker(dest, src string, etcdClient etcd.Client, uniqueID int64
 	for _, f := range opts.EtcdCustomFunctions {
 		f(&param)
 	}
-	key := param.Prefix + "/" + param.Path
+	key := "/" + param.Prefix + "/" + param.Path
 	cbSuite := initCircuitBreaker(key, dest, src, etcdClient, uniqueID)
 
 	return []client.Option{

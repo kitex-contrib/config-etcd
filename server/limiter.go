@@ -40,7 +40,7 @@ func WithLimiter(dest string, etcdClient etcd.Client, uniqueID int64, opts utils
 	for _, f := range opts.EtcdCustomFunctions {
 		f(&param)
 	}
-	key := param.Prefix + "/" + param.Path
+	key := "/" + param.Prefix + "/" + param.Path
 	server.RegisterShutdownHook(func() {
 		etcdClient.DeregisterConfig(key, uniqueID)
 	})
