@@ -30,11 +30,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
-	m      sync.Mutex
-	ctxMap = make(map[string]context.CancelFunc)
-)
-
 type Key struct {
 	Prefix string
 	Path   string
@@ -44,7 +39,7 @@ type Client interface {
 	SetParser(ConfigParser)
 	ClientConfigParam(cpc *ConfigParamConfig, cfs ...CustomFunction) (Key, error)
 	ServerConfigParam(cpc *ConfigParamConfig, cfs ...CustomFunction) (Key, error)
-	RegisterConfigCallback(ctx context.Context, key string, clientId int64, callback func(string, ConfigParser))
+	RegisterConfigCallback(ctx context.Context, key string, clientId int64, callback func(restoreDefault bool, data string, parser ConfigParser))
 	DeregisterConfig(key string, uniqueId int64)
 }
 
@@ -56,6 +51,8 @@ type client struct {
 	prefixTemplate     *template.Template
 	serverPathTemplate *template.Template
 	clientPathTemplate *template.Template
+	cancelMap          map[string]context.CancelFunc
+	m                  sync.Mutex
 }
 
 // Options etcd config options. All the fields have default value.
@@ -69,10 +66,10 @@ type Options struct {
 	ConfigParser     ConfigParser
 }
 
-// New Create a default etcd client
+// NewClient Create a default etcd client
 // It can create a client with default config by env variable.
 // See: env.go
-func New(opts Options) (Client, error) {
+func NewClient(opts Options) (Client, error) {
 	if opts.Node == nil {
 		opts.Node = []string{EtcdDefaultNode}
 	}
@@ -117,6 +114,7 @@ func New(opts Options) (Client, error) {
 		prefixTemplate:     prefixTemplate,
 		serverPathTemplate: serverNameTemplate,
 		clientPathTemplate: clientNameTemplate,
+		cancelMap:          make(map[string]context.CancelFunc),
 	}
 	return c, nil
 }
@@ -167,13 +165,10 @@ func (c *client) render(cpc *ConfigParamConfig, t *template.Template) (string, e
 }
 
 // RegisterConfigCallback register the callback function to etcd client.
-func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueID int64, callback func(string, ConfigParser)) {
-	clientCtx, cancel := context.WithCancel(context.Background())
+func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueID int64, callback func(bool, string, ConfigParser)) {
 	go func() {
-		m.Lock()
-		clientKey := key + "/" + strconv.FormatInt(uniqueID, 10)
-		ctxMap[clientKey] = cancel
-		m.Unlock()
+		clientCtx, cancel := context.WithCancel(context.Background())
+		c.registerCancelFunc(key, uniqueID, cancel)
 		watchChan := c.ecli.Watch(ctx, key)
 		for {
 			select {
@@ -187,35 +182,46 @@ func (c *client) RegisterConfigCallback(ctx context.Context, key string, uniqueI
 						// config is updated
 						value := string(event.Kv.Value)
 						klog.Debugf("[etcd] config key: %s updated,value is %s", key, value)
-						callback(value, c.parser)
+						callback(false, value, c.parser)
 					} else if eventType == mvccpb.DELETE {
 						// config is deleted
 						klog.Debugf("[etcd] config key: %s deleted", key)
-						callback("", c.parser)
+						callback(true, "", c.parser)
 					}
 				}
 			}
 		}
 	}()
-	ctx, cancel = context.WithTimeout(context.Background(), c.etcdTimeout)
+	ctx2, cancel := context.WithTimeout(context.Background(), c.etcdTimeout)
 	defer cancel()
-	data, err := c.ecli.Get(ctx, key)
+	data, err := c.ecli.Get(ctx2, key)
 	// the etcd client has handled the not exist error.
 	if err != nil {
 		klog.Debugf("[etcd] key: %s config get value failed", key)
 		return
 	}
-	if data.Kvs == nil {
-		callback("", c.parser)
+	if data.Count == 0 {
 		return
 	}
-	callback(string(data.Kvs[0].Value), c.parser)
+	callback(false, string(data.Kvs[0].Value), c.parser)
 }
 
 func (c *client) DeregisterConfig(key string, uniqueID int64) {
-	m.Lock()
+	c.deregisterCancelFunc(key, uniqueID)
+}
+
+func (c *client) deregisterCancelFunc(key string, uniqueID int64) {
+	c.m.Lock()
 	clientKey := key + "/" + strconv.FormatInt(uniqueID, 10)
-	cancel := ctxMap[clientKey]
+	cancel := c.cancelMap[clientKey]
 	cancel()
-	m.Unlock()
+	delete(c.cancelMap, clientKey)
+	c.m.Unlock()
+}
+
+func (c *client) registerCancelFunc(key string, uniqueID int64, cancel context.CancelFunc) {
+	c.m.Lock()
+	clientKey := key + "/" + strconv.FormatInt(uniqueID, 10)
+	c.cancelMap[clientKey] = cancel
+	c.m.Unlock()
 }

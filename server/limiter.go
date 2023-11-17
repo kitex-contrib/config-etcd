@@ -55,17 +55,17 @@ func initLimitOptions(key string, uniqueID int64, etcdClient etcd.Client) *limit
 		u.UpdateLimit(opt)
 		updater.Store(u)
 	}
-	onChangeCallback := func(data string, parser etcd.ConfigParser) {
-		if data == "" {
-			klog.Debugf("[etcd] %s server etcd limiter config: get config failed: empty config, skip...", key)
-			return
-		}
+	onChangeCallback := func(restoreDefault bool, data string, parser etcd.ConfigParser) {
 		lc := &limiter.LimiterConfig{}
-		err := parser.Decode(data, lc)
-		if err != nil {
-			klog.Warnf("[etcd] %s server etcd limiter config: unmarshal data %s failed: %s, skip...", key, data, err)
-			return
+
+		if !restoreDefault {
+			err := parser.Decode(data, lc)
+			if err != nil {
+				klog.Warnf("[etcd] %s server etcd limiter config: unmarshal data %s failed: %s, skip...", key, data, err)
+				return
+			}
 		}
+
 		opt.MaxConnections = int(lc.ConnectionLimit)
 		opt.MaxQPS = int(lc.QPSLimit)
 		u := updater.Load()
