@@ -73,12 +73,7 @@ func initRetryContainer(key, dest string,
 		set := utils.Set{}
 		for method, policy := range rcs {
 			set[method] = true
-			if policy.Enable == false {
-				klog.Debugf("[etcd] %s client policy for method %s enable is false",
-					dest, method)
-				continue
-			}
-			if policy.BackupPolicy == nil && policy.FailurePolicy == nil {
+			if policy.Enable && policy.BackupPolicy == nil && policy.FailurePolicy == nil {
 				klog.Warnf("[etcd] %s client policy for method %s BackupPolicy and FailurePolicy must not be empty at same time",
 					dest, method)
 				continue
