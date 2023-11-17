@@ -215,6 +215,7 @@ func (c *client) deregisterCancelFunc(key string, uniqueID int64) {
 	clientKey := key + "/" + strconv.FormatInt(uniqueID, 10)
 	cancel := c.cancelMap[clientKey]
 	cancel()
+	delete(c.cancelMap, clientKey)
 	c.m.Unlock()
 }
 
