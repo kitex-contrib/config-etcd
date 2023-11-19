@@ -118,11 +118,6 @@ func main() {
 
 ### Etcd 配置
 
-根据 Options 的参数初始化 client，建立链接之后 suite 会根据 `Prefix` 以及 `ServerPathFormat` 或者 `ClientPathFormat` 订阅对应的配置并动态更新自身策略，具体参数参考下面 `Options` 变量。
-
-配置的格式默认仅支持 `json`，可以使用函数 [SetParser](https://github.com/kitex-contrib/config-etcd/blob/fef1947d99ee8df270ae39f661069b47a3ab284f/etcd/etcd.go#L122) 进行自定义格式解析方式，并在 `NewSuite` 的时候使用 `CustomFunction` 函数修改订阅函数的格式。
-####
-
 #### CustomFunction
 
 允许用户自定义 etcd 的参数来自定义参数 `Key`.

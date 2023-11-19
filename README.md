@@ -2,7 +2,7 @@
 
 [中文](./README_CN.md)
 
-etcd as config centre for service governance.
+etcd as config center for service governance.
 
 ## Usage
 
@@ -117,11 +117,6 @@ func main() {
 ```
 
 ### Etcd Configuration
-
-The client is initialized according to the parameters of `Options` and connects to the etcd server. After the connection is established, the suite subscribes the appropriate configuration based on `Prefix`, `ServerPathFormat` and `ClientPathFormat` to updates its own policy dynamically. See the `Options` variables below for specific parameters.
-
-The configuration format only supports `json`. You can use the [SetParser](https://github.com/kitex-contrib/config-etcd/blob/fef1947d99ee8df270ae39f661069b47a3ab284f/etcd/etcd.go#L122) function to customise the format parsing method, and the `CustomFunction` function to customise the format of the subscription function during `NewSuite`.
-####
 
 #### CustomFunction
 
