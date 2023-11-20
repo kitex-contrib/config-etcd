@@ -60,7 +60,7 @@ type Options struct {
 	Node             []string
 	Prefix           string
 	ServerPathFormat string
-	clientPathFormat string
+	ClientPathFormat string
 	Timeout          time.Duration
 	LoggerConfig     *zap.Config
 	ConfigParser     ConfigParser
@@ -85,8 +85,8 @@ func NewClient(opts Options) (Client, error) {
 	if opts.ServerPathFormat == "" {
 		opts.ServerPathFormat = EtcdDefaultServerPath
 	}
-	if opts.clientPathFormat == "" {
-		opts.clientPathFormat = EtcdDefaultClientPath
+	if opts.ClientPathFormat == "" {
+		opts.ClientPathFormat = EtcdDefaultClientPath
 	}
 	etcdClient, err := clientv3.New(clientv3.Config{
 		Endpoints: opts.Node,
@@ -103,7 +103,7 @@ func NewClient(opts Options) (Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	clientNameTemplate, err := template.New("clientName").Parse(opts.clientPathFormat)
+	clientNameTemplate, err := template.New("clientName").Parse(opts.ClientPathFormat)
 	if err != nil {
 		return nil, err
 	}
