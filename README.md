@@ -138,8 +138,8 @@ type Key struct {
 | Address          | 127.0.0.1                                                   | Etcd server address                                                                                                                                                                             |
 | Port             | 2379                                                        | Etcd server port                                                                                                                                                                                |
 | Prefix           | /KitexConfig                                                | The prefix of Etcd                                                                                                                                                                              |
-| ClientPathFormat | {{.ClientServiceName}}.{{.ServerServiceName}}.{{.Category}} | Use go [template](https://pkg.go.dev/text/template) syntax rendering to generate the appropriate ID, and use `ClientServiceName` `ServiceName` `Category` three metadata that can be customised |
-| ServerPathFormat | {{.ServerServiceName}}.{{.Category}}                        | Use go [template](https://pkg.go.dev/text/template) syntax rendering to generate the appropriate ID, and use `ServiceName` `Category` two metadatas that can be customised                      |
+| ClientPathFormat | {{.ClientServiceName}}/{{.ServerServiceName}}/{{.Category}} | Use go [template](https://pkg.go.dev/text/template) syntax rendering to generate the appropriate ID, and use `ClientServiceName` `ServiceName` `Category` three metadata that can be customised |
+| ServerPathFormat | {{.ServerServiceName}}/{{.Category}}                        | Use go [template](https://pkg.go.dev/text/template) syntax rendering to generate the appropriate ID, and use `ServiceName` `Category` two metadatas that can be customised                      |
 
 #### Governance Policy
 > The configPath and configPrefix in the following example use default values, the service name is `ServiceName` and the client name is `ClientName`.
