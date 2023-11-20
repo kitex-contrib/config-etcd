@@ -40,7 +40,10 @@ func (s *EchoImpl) Echo(ctx context.Context, req *api.Request) (resp *api.Respon
 func main() {
 	klog.SetLevel(klog.LevelDebug)
 	serviceName := "ServiceName"
-	etcdClient, _ := etcd.NewClient(etcd.Options{})
+	etcdClient, err := etcd.NewClient(etcd.Options{})
+	if err!=nil {
+		panic(err)
+	}
 	svr := echo.NewServer(
 		new(EchoImpl),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: serviceName}),
@@ -153,7 +156,7 @@ type Key struct {
 
 例子：
 
-> configPath: ServiceName.limit
+> configPath: /KitexConfig/ServiceName/limit
 
 ```json
 {
@@ -178,7 +181,7 @@ type Key struct {
 
 例子：
 
-> configPath: ClientName.ServiceName.retry
+> configPath: /KitexConfig/ClientName/ServiceName/retry
 
 ```json
 {
@@ -190,7 +193,7 @@ type Key struct {
                 "max_retry_times": 3,
                 "max_duration_ms": 2000,
                 "cb_policy": {
-                    "error_rate": 0.5
+                    "error_rate": 0.3
                 }
             },
             "backoff_policy": {
@@ -227,7 +230,7 @@ type Key struct {
 
 例子：
 
-> configPath: ClientName.ServiceName.rpc_timeout
+> configPath: /KitexConfig/ClientName/ServiceName/rpc_timeout
 
 ```json
 {
@@ -255,7 +258,7 @@ type Key struct {
 
 echo 方法使用下面的配置（0.3、100），其他方法使用全局默认配置（0.5、200）
 
-> configPath: `ClientName.ServiceName.circuit_break`
+> configPath: /KitexConfig/ClientName/ServiceName/circuit_break
 
 ```json
 {
