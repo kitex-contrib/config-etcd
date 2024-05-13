@@ -1,0 +1,65 @@
+package degradation
+
+import (
+	"context"
+	"sync/atomic"
+
+	"github.com/bytedance/gopkg/lang/fastrand"
+	"github.com/cloudwego/configmanager/iface"
+	"github.com/cloudwego/kitex/pkg/acl"
+	"github.com/cloudwego/kitex/pkg/kerrors"
+)
+
+var defaultConfig = &Config{
+	Enabled:    false,
+	Percentage: 0,
+}
+
+type Config struct {
+	Enabled    bool `json:"enabled"`
+	Percentage int  `json:"percentage"`
+}
+
+// DeepCopy returns a copy of the current Config
+func (c *Config) DeepCopy() iface.ConfigValueItem {
+	result := &Config{
+		Enabled:    c.Enabled,
+		Percentage: c.Percentage,
+	}
+	return result
+}
+
+// EqualsTo returns true if the current Config equals to the other Config
+func (c *Config) EqualsTo(other iface.ConfigValueItem) bool {
+	o := other.(*Config)
+	return c.Enabled == o.Enabled && c.Percentage == o.Percentage
+}
+
+// Container is a wrapper for RejectFunc and Config
+type Container struct {
+	config atomic.Value
+}
+
+func NewContainer() *Container {
+	c := &Container{}
+	c.config.Store(defaultConfig)
+	return c
+}
+
+// NotifyPolicyChange to receive policy when it changes
+func (c *Container) NotifyPolicyChange(cfg *Config) {
+	c.config.Store(cfg)
+}
+
+func (c *Container) GetAclRule() acl.RejectFunc {
+	return func(ctx context.Context, request interface{}) (reason error) {
+		cfg := c.config.Load().(*Config)
+		if !cfg.Enabled {
+			return nil
+		}
+		if fastrand.Intn(100) < cfg.Percentage {
+			return kerrors.ErrACL
+		}
+		return nil
+	}
+}

@@ -17,32 +17,29 @@ package client
 import (
 	"context"
 
-	"github.com/kitex-contrib/config-etcd/pkg/utils"
-
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/klog"
-	"github.com/cloudwego/kitex/pkg/rpcinfo"
-	"github.com/cloudwego/kitex/pkg/rpctimeout"
 	"github.com/kitex-contrib/config-etcd/etcd"
+	"github.com/kitex-contrib/config-etcd/pkg/degradation"
+	"github.com/kitex-contrib/config-etcd/pkg/utils"
 )
 
-// WithRPCTimeout sets the RPC timeout policy from etcd configuration center.
-func WithRPCTimeout(dest, src string, etcdClient etcd.Client, uniqueID int64, opts utils.Options) []client.Option {
+func WithDegradation(dest, src string, etcdClient etcd.Client, uniqueID int64, opts utils.Options) []client.Option {
 	param, err := etcdClient.ClientConfigParam(&etcd.ConfigParamConfig{
-		Category:          rpcTimeoutConfigName,
+		Category:          degradationConfigName,
 		ServerServiceName: dest,
 		ClientServiceName: src,
 	})
 	if err != nil {
 		panic(err)
 	}
-
 	for _, f := range opts.EtcdCustomFunctions {
 		f(&param)
 	}
 	key := param.Prefix + "/" + param.Path
+	container := initDegradationOptions(key, dest, uniqueID, etcdClient)
 	return []client.Option{
-		client.WithTimeoutProvider(initRPCTimeoutContainer(key, dest, etcdClient, uniqueID)),
+		client.WithMiddleware(degradation.NewDegradationMiddleware(container)),
 		client.WithCloseCallbacks(func() error {
 			// cancel the configuration listener when client is closed.
 			etcdClient.DeregisterConfig(key, uniqueID)
@@ -51,24 +48,19 @@ func WithRPCTimeout(dest, src string, etcdClient etcd.Client, uniqueID int64, op
 	}
 }
 
-func initRPCTimeoutContainer(key, dest string,
-	etcdClient etcd.Client, uniqueID int64,
-) rpcinfo.TimeoutProvider {
-	rpcTimeoutContainer := rpctimeout.NewContainer()
-
+func initDegradationOptions(key, dest string, uniqueID int64, etcdClient etcd.Client) *degradation.Container {
+	container := degradation.NewContainer()
 	onChangeCallback := func(restoreDefault bool, data string, parser etcd.ConfigParser) {
-		configs := map[string]*rpctimeout.RPCTimeout{}
+		config := &degradation.Config{}
 		if !restoreDefault {
-			err := parser.Decode(data, &configs)
+			err := parser.Decode(data, config)
 			if err != nil {
-				klog.Warnf("[etcd] %s client etcd rpc timeout: unmarshal data %s failed: %s, skip...", key, data, err)
+				klog.Warnf("[etcd] %s server etcd degradation config: unmarshal data %s failed: %s, skip...", key, data, err)
 				return
 			}
 		}
-		rpcTimeoutContainer.NotifyPolicyChange(configs)
+		container.NotifyPolicyChange(config)
 	}
-
 	etcdClient.RegisterConfigCallback(context.Background(), key, uniqueID, onChangeCallback)
-
-	return rpcTimeoutContainer
+	return container
 }

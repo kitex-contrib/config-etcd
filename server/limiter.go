@@ -18,7 +18,7 @@ import (
 	"context"
 	"sync/atomic"
 
-	"github.com/kitex-contrib/config-etcd/utils"
+	"github.com/kitex-contrib/config-etcd/pkg/utils"
 
 	"github.com/kitex-contrib/config-etcd/etcd"
 

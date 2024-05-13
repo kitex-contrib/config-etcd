@@ -17,13 +17,14 @@ package client
 import (
 	"github.com/cloudwego/kitex/client"
 	"github.com/kitex-contrib/config-etcd/etcd"
-	"github.com/kitex-contrib/config-etcd/utils"
+	"github.com/kitex-contrib/config-etcd/pkg/utils"
 )
 
 const (
 	retryConfigName          = "retry"
 	rpcTimeoutConfigName     = "rpc_timeout"
 	circuitBreakerConfigName = "circuit_break"
+	degradationConfigName    = "degradation"
 )
 
 // EtcdClientSuite etcd client config suite, configure retry timeout limit and circuitbreak dynamically from etcd.
@@ -58,5 +59,6 @@ func (s *EtcdClientSuite) Options() []client.Option {
 	opts = append(opts, WithRetryPolicy(s.service, s.client, s.etcdClient, s.uid, s.opts)...)
 	opts = append(opts, WithRPCTimeout(s.service, s.client, s.etcdClient, s.uid, s.opts)...)
 	opts = append(opts, WithCircuitBreaker(s.service, s.client, s.etcdClient, s.uid, s.opts)...)
+	opts = append(opts, WithDegradation(s.service, s.client, s.etcdClient, s.uid, s.opts)...)
 	return opts
 }

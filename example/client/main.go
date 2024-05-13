@@ -25,7 +25,7 @@ import (
 	"github.com/cloudwego/kitex/pkg/klog"
 	etcdclient "github.com/kitex-contrib/config-etcd/client"
 	"github.com/kitex-contrib/config-etcd/etcd"
-	"github.com/kitex-contrib/config-etcd/utils"
+	"github.com/kitex-contrib/config-etcd/pkg/utils"
 )
 
 type configLog struct{}
