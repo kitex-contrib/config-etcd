@@ -17,13 +17,12 @@ package client
 import (
 	"context"
 
-	"github.com/kitex-contrib/config-etcd/pkg/utils"
-
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/pkg/rpctimeout"
 	"github.com/kitex-contrib/config-etcd/etcd"
+	"github.com/kitex-contrib/config-etcd/utils"
 )
 
 // WithRPCTimeout sets the RPC timeout policy from etcd configuration center.

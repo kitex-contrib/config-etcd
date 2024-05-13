@@ -18,14 +18,13 @@ import (
 	"context"
 	"strings"
 
-	"github.com/kitex-contrib/config-etcd/pkg/utils"
-
 	"github.com/cloudwego/kitex/pkg/klog"
 
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/circuitbreak"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/kitex-contrib/config-etcd/etcd"
+	"github.com/kitex-contrib/config-etcd/utils"
 )
 
 // WithCircuitBreaker sets the circuit breaker policy from etcd configuration center.

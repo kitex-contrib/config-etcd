@@ -17,12 +17,11 @@ package client
 import (
 	"context"
 
-	"github.com/kitex-contrib/config-etcd/pkg/utils"
-
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/retry"
 	"github.com/kitex-contrib/config-etcd/etcd"
+	"github.com/kitex-contrib/config-etcd/utils"
 )
 
 // WithRetryPolicy sets the retry policy from etcd configuration center.

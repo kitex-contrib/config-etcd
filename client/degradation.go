@@ -21,7 +21,7 @@ import (
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/kitex-contrib/config-etcd/etcd"
 	"github.com/kitex-contrib/config-etcd/pkg/degradation"
-	"github.com/kitex-contrib/config-etcd/pkg/utils"
+	"github.com/kitex-contrib/config-etcd/utils"
 )
 
 func WithDegradation(dest, src string, etcdClient etcd.Client, uniqueID int64, opts utils.Options) []client.Option {

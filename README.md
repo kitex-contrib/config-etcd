@@ -274,6 +274,7 @@ The echo method uses the following configuration (0.3, 100) and other methods us
 
 | Variable   | Introduction                       |
 |------------|------------------------------------|
+| enable     | Whether to enable degradation      |
 | percentage | The percentage of dropped requests | 
 
 Example：

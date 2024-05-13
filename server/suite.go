@@ -17,7 +17,7 @@ package server
 import (
 	"github.com/cloudwego/kitex/server"
 	"github.com/kitex-contrib/config-etcd/etcd"
-	"github.com/kitex-contrib/config-etcd/pkg/utils"
+	"github.com/kitex-contrib/config-etcd/utils"
 )
 
 const (

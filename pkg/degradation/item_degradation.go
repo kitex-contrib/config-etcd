@@ -25,19 +25,19 @@ import (
 )
 
 var defaultConfig = &Config{
-	Enabled:    false,
+	Enable:     false,
 	Percentage: 0,
 }
 
 type Config struct {
-	Enabled    bool `json:"enabled"`
+	Enable     bool `json:"enabled"`
 	Percentage int  `json:"percentage"`
 }
 
 // DeepCopy returns a copy of the current Config
 func (c *Config) DeepCopy() iface.ConfigValueItem {
 	result := &Config{
-		Enabled:    c.Enabled,
+		Enable:     c.Enable,
 		Percentage: c.Percentage,
 	}
 	return result
@@ -46,7 +46,7 @@ func (c *Config) DeepCopy() iface.ConfigValueItem {
 // EqualsTo returns true if the current Config equals to the other Config
 func (c *Config) EqualsTo(other iface.ConfigValueItem) bool {
 	o := other.(*Config)
-	return c.Enabled == o.Enabled && c.Percentage == o.Percentage
+	return c.Enable == o.Enable && c.Percentage == o.Percentage
 }
 
 // Container is a wrapper for RejectFunc and Config
@@ -68,7 +68,7 @@ func (c *Container) NotifyPolicyChange(cfg *Config) {
 func (c *Container) GetAclRule() acl.RejectFunc {
 	return func(ctx context.Context, request interface{}) (reason error) {
 		cfg := c.config.Load().(*Config)
-		if !cfg.Enabled {
+		if !cfg.Enable {
 			return nil
 		}
 		if fastrand.Intn(100) < cfg.Percentage {
