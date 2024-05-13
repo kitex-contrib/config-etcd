@@ -30,7 +30,7 @@ var defaultConfig = &Config{
 }
 
 type Config struct {
-	Enable     bool `json:"enabled"`
+	Enable     bool `json:"enable"`
 	Percentage int  `json:"percentage"`
 }
 
