@@ -1,4 +1,4 @@
-// Copyright 2023 CloudWeGo Authors
+// Copyright 2024 CloudWeGo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,9 +17,10 @@ package degradation
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/cloudwego/kitex/pkg/kerrors"
 	"github.com/cloudwego/thriftgo/pkg/test"
-	"testing"
 )
 
 var errFake = errors.New("fake error")
