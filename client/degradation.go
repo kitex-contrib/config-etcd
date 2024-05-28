@@ -39,7 +39,7 @@ func WithDegradation(dest, src string, etcdClient etcd.Client, uniqueID int64, o
 	key := param.Prefix + "/" + param.Path
 	container := initDegradationOptions(key, dest, uniqueID, etcdClient)
 	return []client.Option{
-		client.WithMiddleware(degradation.NewDegradationMiddleware(container)),
+		client.WithACLRules(container.GetAclRule()),
 		client.WithCloseCallbacks(func() error {
 			// cancel the configuration listener when client is closed.
 			etcdClient.DeregisterConfig(key, uniqueID)

@@ -19,6 +19,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/cloudwego/kitex/pkg/acl"
+
 	"github.com/cloudwego/kitex/pkg/kerrors"
 	"github.com/cloudwego/thriftgo/pkg/test"
 )
@@ -29,10 +31,12 @@ func invoke(ctx context.Context, request, response interface{}) error {
 	return errFake
 }
 
-func TestNewDegradationMiddleware(t *testing.T) {
+func TestNewContainer(t *testing.T) {
 	container := NewContainer()
-	degradationMiddleware := NewDegradationMiddleware(container)
-	test.Assert(t, errors.Is(degradationMiddleware(invoke)(context.Background(), nil, nil), errFake))
+	aclMiddleware := acl.NewACLMiddleware([]acl.RejectFunc{container.GetAclRule()})
+	test.Assert(t, errors.Is(aclMiddleware(invoke)(context.Background(), nil, nil), errFake))
+	container.NotifyPolicyChange(&Config{Enable: false, Percentage: 100})
+	test.Assert(t, errors.Is(aclMiddleware(invoke)(context.Background(), nil, nil), errFake))
 	container.NotifyPolicyChange(&Config{Enable: true, Percentage: 100})
-	test.Assert(t, errors.Is(degradationMiddleware(invoke)(context.Background(), nil, nil), kerrors.ErrACL))
+	test.Assert(t, errors.Is(aclMiddleware(invoke)(context.Background(), nil, nil), kerrors.ErrACL))
 }

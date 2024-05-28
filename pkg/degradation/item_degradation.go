@@ -49,7 +49,7 @@ func (c *Config) EqualsTo(other iface.ConfigValueItem) bool {
 	return c.Enable == o.Enable && c.Percentage == o.Percentage
 }
 
-// Container is a wrapper for RejectFunc and Config
+// Container is a wrapper for Config
 type Container struct {
 	config atomic.Value
 }
