@@ -48,7 +48,7 @@ func NewSuite(service string, cli etcd.Client,
 	return su
 }
 
-// Options return a list client.Option
+// Options return a list server.Option
 func (s *EtcdServerSuite) Options() []server.Option {
 	opts := make([]server.Option, 0, 2)
 	opts = append(opts, WithLimiter(s.service, s.etcdClient, s.uid, s.opts))
