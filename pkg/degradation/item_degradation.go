@@ -16,13 +16,15 @@ package degradation
 
 import (
 	"context"
+	"errors"
 	"sync/atomic"
 
 	"github.com/bytedance/gopkg/lang/fastrand"
 	"github.com/cloudwego/configmanager/iface"
 	"github.com/cloudwego/kitex/pkg/acl"
-	"github.com/cloudwego/kitex/pkg/kerrors"
 )
+
+var errRejected = errors.New("rejected by client degradation config")
 
 var defaultConfig = &Config{
 	Enable:     false,
@@ -72,7 +74,7 @@ func (c *Container) GetAclRule() acl.RejectFunc {
 			return nil
 		}
 		if fastrand.Intn(100) < cfg.Percentage {
-			return kerrors.ErrACL
+			return errRejected
 		}
 		return nil
 	}
