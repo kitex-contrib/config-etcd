@@ -20,8 +20,6 @@ import (
 	"testing"
 
 	"github.com/cloudwego/kitex/pkg/acl"
-
-	"github.com/cloudwego/kitex/pkg/kerrors"
 	"github.com/cloudwego/thriftgo/pkg/test"
 )
 
@@ -38,5 +36,5 @@ func TestNewContainer(t *testing.T) {
 	container.NotifyPolicyChange(&Config{Enable: false, Percentage: 100})
 	test.Assert(t, errors.Is(aclMiddleware(invoke)(context.Background(), nil, nil), errFake))
 	container.NotifyPolicyChange(&Config{Enable: true, Percentage: 100})
-	test.Assert(t, errors.Is(aclMiddleware(invoke)(context.Background(), nil, nil), kerrors.ErrACL))
+	test.Assert(t, errors.Is(aclMiddleware(invoke)(context.Background(), nil, nil), errRejected))
 }
